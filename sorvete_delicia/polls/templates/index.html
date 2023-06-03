@@ -1,0 +1,30 @@
+{% extends "header.html" %}
+{% block content %}
+
+<!-- Seção de produtos -->
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            {% for sorvete in lista_sorvetes %}
+
+                <div class="col-md-4">
+                    <div class="card mb-4">
+                        <img src="http://localhost:8000/image/{{sorvete.imagem}}" class="card-img-top">
+                        <div class="card-body">
+                            <h5 class="card-title">{{sorvete.sabor}}</h5>
+                            <p class="card-text">
+                                Marca: {{sorvete.marca}} <br>
+                                Preço por mL: R${{sorvete.preco}}
+                            </p>
+                            <a href="#" class="btn btn-primary">Compre agora!</a>
+                        </div>
+                    </div>
+                </div>
+
+            {% endfor %}
+            
+        </div>
+    </div>
+    </div>
+</section>
+{% endblock %}
