@@ -53,7 +53,7 @@ class Sorvete(models.Model):
     estoque = models.FloatField(help_text="qtd em Litros")
     preco = models.FloatField(help_text="preço em MiliLitros")
     imagem = models.ImageField(default=None)
-    ingredientes = models.ManyToManyField(Ingrediente, default=True)
+    ingredientes = models.ManyToManyField(Ingrediente)
 
     def __str__(self):
         return f"{self.sabor} - {self.marca}"
