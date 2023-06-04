@@ -48,11 +48,12 @@ class Componente(models.Model):
 
 class Sorvete(models.Model):
     sabor = models.CharField(max_length=30)
-    marca = models.CharField(max_length=30)
+    marca = models.CharField(max_length=30, default=True)
+    descricao = models.CharField(max_length=240, default=True)
     estoque = models.FloatField(help_text="qtd em Litros")
     preco = models.FloatField(help_text="preço em MiliLitros")
     imagem = models.ImageField(default=None)
-    ingredientes = models.ManyToManyField(Ingrediente)
+    ingredientes = models.ManyToManyField(Ingrediente, default=True)
 
     def __str__(self):
         return f"{self.sabor} - {self.marca}"
@@ -65,7 +66,7 @@ class Cupom(models.Model):
         return f"{self.codigo} - {self.desconto*100}%"
 
 class Produto(models.Model):
-    componenetes = models.ManyToManyField(Componente)
+    componenetes = models.ManyToManyField(Componente, default=True)
     tigela = models.ForeignKey(Tigela, on_delete=models.PROTECT)
     sorvete = models.ForeignKey(Sorvete, on_delete=models.PROTECT)
     preco = models.FloatField()

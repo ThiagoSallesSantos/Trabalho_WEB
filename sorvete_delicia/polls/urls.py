@@ -4,5 +4,6 @@ from . import views
 
 urlpatterns = [
     path("", views.index, name="index"),
-    path("image/<str:name>", views.imageExportView, name="image"),
+    path("sorvete/<int:id_sorvete>", views.sorvete, name="sorvete"),
+    path("exibir_imagem/<str:path_imagem>", views.exibir_imagem, name="exibir_imagem")
 ]

@@ -1,86 +1,47 @@
-<!DOCTYPE html>
-<html lang="pt-br">
+{% extends "header.html" %}
+{% block content %}
 
-<head>
-    <!-- Metadados da página -->
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-
-    <!-- Título da página -->
-    <title>Sorvete de Baunilha - Sorvetes Delícia</title>
-
-    <!-- Arquivo CSS do Bootstrap 5 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css">
-
-</head>
-
-<body>
-
-    <!-- Barra de navegação -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <div class="container">
-            <a class="navbar-brand" href="#">Sorvetes Delícia</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Produtos</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Sobre Nós</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Contato</a>
-                    </li>
-                </ul>
+<!-- Banner principal -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <h1>{{sorvete.sabor}}</h1>
+                <p class="lead">
+                    <b>Marca: </b>{{sorvete.marca}}
+                </p>
+                <p class="lead">
+                    <b>Descrição: </b>{{sorvete.descricao}}
+                </p>
+                <p class="lead">
+                    <b>Ingredientes: </b>
+                    {% for ingrediente in lista_ingredientes %}
+                        {{ingrediente.nome}};
+                    {% endfor %}
+                </p>
+            </div>
+            <div class="col-md-6">
+                <img src="http://localhost:8000/exibir_imagem/{{sorvete.imagem}}" 
+                    alt={{sorvete.sabor}} class="img-fluid">
             </div>
         </div>
-    </nav>
+    </div>
+</section>
 
-    <!-- Banner principal -->
-    <section class="py-5 bg-light">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6">
-                    <h1>Sorvete de Baunilha</h1>
-                    <p class="lead">Sorvete cremoso de baunilha orgânica.</p>
-                </div>
-                <div class="col-md-6">
-                    <img src="https://via.placeholder.com/500x300.png?text=Sorvete+de+Baunilha"
-                        alt="Sorvete de Baunilha" class="img-fluid">
-                </div>
+<!-- Seção de detalhes do produto -->
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                
+            </div>
+            <div class="col-md-6">
+                <h2>Preço</h2>
+                <p class="lead">R$ 10,00</p>
+                <a href="#" class="btn btn-primary">Compre agora!</a>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    <!-- Seção de detalhes do produto -->
-    <section class="py-5">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6">
-                    <h2>Detalhes do Produto</h2>
-                    <p>O sorvete de baunilha da Sorvetes Delícia é feito com ingredientes naturais e orgânicos,
-                        garantindo um sabor único e cremoso. Nossa receita exclusiva é preparada com baunilha de
-                        Madagascar, conhecida por sua qualidade superior.</p>
-                </div>
-                <div class="col-md-6">
-                    <h2>Preço</h2>
-                    <p class="lead">R$ 10,00</p>
-                    <a href="#" class="btn btn-primary">Compre agora!</a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Rodapé -->
-    <footer class="bg-primary text-white text-center py-3">
-        <p>&copy; 2023 Sorvetes Delícia - Todos os direitos reservados.</p>
-    </footer>
-    <!-- Arquivo JS do Bootstrap 5 -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.min.js"></script>
-</body>
-
-</html>
+{% endblock %}
