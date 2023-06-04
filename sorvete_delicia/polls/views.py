@@ -141,9 +141,7 @@ def organiza_lista_tigelas(lista_tigelas):
 def register_request(request):
 	if request.method == "POST":
 		form = NewUserForm(request.POST)
-		print("aaaaaa")
 		if form.is_valid():
-			print("valido")
 			user = form.save()
 			login(request, user)
 			messages.success(request, "Registration successful." )
