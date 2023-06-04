@@ -11,6 +11,9 @@
                     <b>Marca: </b>{{sorvete.marca}}
                 </p>
                 <p class="lead">
+                    <b>Preço em ml: </b>{{sorvete.preco}}
+                </p>
+                <p class="lead">
                     <b>Descrição: </b>{{sorvete.descricao}}
                 </p>
                 <p class="lead">
@@ -32,30 +35,49 @@
 <section class="py-5 bg-primary text-white">
     <div class="container">
         <div class="row">
-            <div class="col-md-4">
-                {% for tigela in lista_tigelas %}
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="tigela" id="{{tigela.tamanho}}-{{tigela.tipo}}" value="{{tigela.tamanho}}">
-                        <label class="form-check-label" for="tigela">
-                            {{tigela.tamanho}}ml <br/>
-                        </label>
+            <div class="col-md-auto">
+                <div class="container">
+                    <div class="row">
+                        {% for tigela_tipo in lista_tigelas %}
+
+                            {% if tigela_tipo.tigelas%}
+
+                                <div class="col-md-auto border-end">
+                                    <p class="lead">
+                                        <b>{{tigela_tipo.tipo}}</b>
+                                    </p>
+                                    {% for tigela in tigela_tipo.tigelas %}
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="tigelas" id="{{tigela.id}}" value="{{tigela.tamanho}}">
+                                            <label class="form-check-label" for="tigelas">
+                                                {{tigela.tamanho}}ml <br/>
+                                            </label>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            
+                            {% endif %}
+                        
+                        {% endfor %}
                     </div>
-                {% endfor %}
+                </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-auto border-end">
                 {% for componente in lista_componentes %}
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="componente" value="{{componente.preco}}" id="{{componente.nome}}">
-                        <label class="form-check-label" for="componente">
+                        <input class="form-check-input" type="checkbox" name="componentes" value="{{componente.preco}}" id="{{componente.id}}">
+                        <label class="form-check-label" for="componentes">
                             {{componente.nome}} - R$ {{componente.preco}}
                         </label>
                     </div>
                 {% endfor %}
             </div>
-            <div class="col-md-4">
+            <div class="col-md-auto">
                 <h2>Preço</h2>
-                <p class="lead" id="preco">R$ ??,??</p>
-                <a href="#" class="btn bg-white text-primary">Comprar!</a>
+                <p class="lead"> 
+                    R$ <span id="preco" value=0.0>0.0</span>
+                </p>
+                <a href="http://localhost:8000/" class="btn bg-white text-primary" id="comprar">Comprar!</a>
             </div>
         </div>
     </div>
@@ -69,12 +91,65 @@ window.addEventListener('load',
         calcula_preco();
     }, false);
 
-function disnable_tigelas(){
-    return false;
+
+var componentes = document.querySelectorAll("input[type=checkbox][name=componentes]");
+
+componentes.forEach(function(componente) {
+    componente.addEventListener('change', function() {
+        calcula_preco();
+    })
+});
+
+var tigelas = document.querySelectorAll("input[type=radio][name=tigelas]");
+tigelas.forEach(function(tigela) {
+    tigela.addEventListener('change', function() {
+        calcula_preco();
+    })
+});
+
+function get_tigela_selecionada(){
+    var lista_tigelas = document.getElementsByName('tigelas');
+    for(var i = 0; i < lista_tigelas.length; i++){
+        if(lista_tigelas[i].checked){
+            return lista_tigelas[i].value;
+        }
+    }
+    return 0.0
+}
+
+function get_componentes_selecionados(){
+    lista_componentes = document.getElementsByName('componentes');
+    var preco_componenetes_selecionados = 0.0
+    for(var i = 0; i < lista_componentes.length; i++){
+        if(lista_componentes[i].checked){
+            preco_componenetes_selecionados += Number(lista_componentes[i].value);
+        }
+    }
+    return preco_componenetes_selecionados
 }
 
 function calcula_preco(){
-    alert($("input[type='radio'][name='rate']:checked").val());
+    var tigela_selecionada = get_tigela_selecionada();
+    id_comprar = document.getElementById("comprar");
+    if(!tigela_selecionada){
+        id_comprar.setAttribute("disabled", "disabled");
+        return
+    }
+    id_comprar.removeAttribute("disabled")
+    var preco_componenetes_selecionados = get_componentes_selecionados();
+    preco = "{{sorvete.preco}}" * tigela_selecionada + preco_componenetes_selecionados;
+    id_preco = document.getElementById("preco");
+    id_preco.value = preco.toFixed(2);
+    id_preco.textContent = preco.toFixed(2)
+}
+
+function disnable_tigelas(){
+    var lista_tigelas = document.getElementsByName('tigelas');
+    for(var i = 0; i < lista_tigelas.length; i++){
+        if(lista_tigelas[i].value > "{{sorvete.estoque}}"*1000){
+            lista_tigelas[i].setAttribute("disabled", "disabled");
+        }
+    }
 }
 
 </script>
