@@ -31,11 +31,39 @@ def sorvete(request, id_sorvete):
         """
         cursor.execute(SQL)
         sorvete = dictfetchall(cursor)[0]
-    return render(request, "sorvete.html", {"sorvete": sorvete, "lista_ingredientes": ingredientes_sorvete(id_sorvete)})
+    return render(request, "sorvete.html", {"sorvete": sorvete, 
+                                            "lista_ingredientes": get_ingredientes_by_sorvete(id_sorvete),
+                                            "lista_tigelas": get_all_tigelas(),
+                                            "lista_componentes": get_all_componentes()
+                                        })
 
 ## Paginas Auxiliares
 
-def ingredientes_sorvete(id_sorvete):
+def get_all_componentes():
+    lista_componentes = list([])
+    with connection.cursor() as cursor:
+        SQL = """
+            SELECT *
+            FROM polls_componente;
+        """
+        cursor.execute(SQL)
+        lista_componentes = dictfetchall(cursor)
+        print(lista_componentes)
+    return lista_componentes
+
+def get_all_tigelas():
+    lista_tigelas = list([])
+    with connection.cursor() as cursor:
+        SQL = """
+            SELECT *
+            FROM polls_tigela;
+        """
+        cursor.execute(SQL)
+        lista_tigelas = dictfetchall(cursor)
+        print(lista_tigelas)
+    return lista_tigelas
+
+def get_ingredientes_by_sorvete(id_sorvete):
     lista_ingredientes = list([])
     with connection.cursor() as cursor:
         SQL = f"""
