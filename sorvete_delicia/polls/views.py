@@ -1,7 +1,13 @@
 from django.http import HttpResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.db import connection
 from sorvete_delicia.settings import MEDIA_ROOT
+
+from .forms import NewUserForm
+from django.contrib.auth import login, authenticate, logout
+from django.contrib import messages
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import AuthenticationForm 
 
 def dictfetchall(cursor):
     columns = [col[0] for col in cursor.description]
@@ -131,3 +137,40 @@ def organiza_lista_tigelas(lista_tigelas):
                 chave = "Outros."
         lista_tigelas_organizada[chave]["tigelas"].append(dado)
     return list(lista_tigelas_organizada.values())
+
+def register_request(request):
+	if request.method == "POST":
+		form = NewUserForm(request.POST)
+		print("aaaaaa")
+		if form.is_valid():
+			print("valido")
+			user = form.save()
+			login(request, user)
+			messages.success(request, "Registration successful." )
+			return redirect("index")
+		messages.error(request, form.errors)
+	form = NewUserForm()
+	return render(request, "register.html", {"register_form":form})
+
+def login_request(request):
+	if request.method == "POST":
+		form = AuthenticationForm(request, data=request.POST)
+		if form.is_valid():
+			username = form.cleaned_data.get('username')
+			password = form.cleaned_data.get('password')
+			user = authenticate(username=username, password=password)
+			if user is not None:
+				login(request, user)
+				messages.info(request, f"You are now logged in as {username}.")
+				return redirect("index")
+			else:
+				messages.error(request,"Invalid username or password.")
+		else:
+			messages.error(request,"Invalid username or password.")
+	form = AuthenticationForm()
+	return render(request, "login.html", {"login_form":form})
+
+def logout_request(request):
+	logout(request)
+	messages.info(request, "You have successfully logged out.") 
+	return redirect("index")
