@@ -1,9 +1,10 @@
 from django.http import HttpResponse
+from datetime import datetime
 from django.shortcuts import render, redirect
 from django.db import connection
 from sorvete_delicia.settings import MEDIA_ROOT
 from .models import *
-from .forms import NewUserForm, MontarSorvete
+from .forms import NewUserForm, MontarSorvete, ComprarSorvete
 from django.contrib.auth import login, authenticate, logout
 from django.contrib import messages
 from django.contrib.auth.forms import AuthenticationForm 
@@ -37,7 +38,7 @@ def sorvete(request, id_sorvete):
             else:
                 messages.error(request,"Você precisar estar logado em sua conta para montar um sorvete!")
         else:
-            messages.error(request,"Erro ao montar o seu sorvete!")
+            messages.error(request,"Erro ao preencher formulário para montar o seu sorvete!")
     with connection.cursor() as cursor:
         SQL = f"""
             SELECT * 
@@ -54,11 +55,25 @@ def sorvete(request, id_sorvete):
 
 def meus_sorvetes(request):
     if request.user.is_authenticated:
+        if request.method == "POST":
+            form = ComprarSorvete(request.POST)
+            if form.is_valid():
+                cria_venda(dict(request.POST), request.user)
+                messages.success(request, "Compra encaminhada com sucessor!")
+            else:
+                messages.error(request, "Erro ao preencher formulário para comprar o seu(s) sorvete(s)!")
         return render(request, "meus_sorvetes.html", {
-                                                    "lista_produtos": calcula_preco_produto(get_all_produtos_by_user(request.user))
+                                                    "lista_produtos": calcula_sorvete_disponivel(calcula_preco_produto(get_all_produtos_by_user(request.user)))
                                                 })
     else:
         messages.error(request,"Você precisar estar logado em sua conta para acessar sua página de produtos!")
+        return redirect("index")
+
+def minhas_compras(request):
+    if request.user.is_authenticated:
+        ...
+    else:
+        messages.error(request,"Você precisar estar logado em sua conta para acessar sua página de compra(s) passada(s)!")
         return redirect("index")
 
 def deleta_produtos(request, id_produto: int):
@@ -111,6 +126,22 @@ def logout_request(request):
 
 ## Paginas Auxiliares - Acesso ao Banco
 
+def cria_venda(form, usuario):
+    venda = Venda()
+    venda.cliente = usuario
+    venda.data = datetime.now()
+    venda.preco = form["preco"][0]
+    venda.save()
+
+    relacao_produto_qtd = dict(zip(form["id_produto"], form["qtd_sorvete"]))
+    for id_produto in relacao_produto_qtd.keys():
+        produto = Produto.objects.get(id=id_produto)
+        relacao = RelacaoProdutoVenda.objects.create(produto=produto, venda=venda, qtd_produto=relacao_produto_qtd[id_produto])
+        venda.relacaoprodutovenda_set.add(relacao)
+        produto.relacaoprodutovenda_set.add(relacao)
+    venda.save()
+    
+
 def get_all_produtos_by_user(usuario):
     lista_produtos = Produto.objects.filter(cliente=usuario)
     for index, produto in enumerate(lista_produtos):
@@ -124,11 +155,12 @@ def cria_produto(form, usuario):
     produto.cliente = usuario
     produto.save()
 
-    lista_componentes: list[Componente] = list([])
-    for componente_id in form["componentes"]:
-        lista_componentes.append(Componente.objects.get(id=componente_id))
-    produto.componentes.set(lista_componentes)
-    produto.save()
+    if "componentes" in form.keys():
+        lista_componentes: list[Componente] = list([])
+        for componente_id in form["componentes"]:
+            lista_componentes.append(Componente.objects.get(id=componente_id))
+        produto.componentes.set(lista_componentes)
+        produto.save()
 
 def get_all_componentes():
     lista_componentes = list([])
@@ -181,6 +213,11 @@ def get_ingredientes_by_sorvete(id_sorvete):
     return lista_ingredientes
 
 ## Paginas Auxiliares - Sem Acesso ao Banco
+
+def calcula_sorvete_disponivel(lista_produtos):
+    for index, produto in enumerate(lista_produtos):
+        lista_produtos[index].sorvete_disponivel = int((produto.sorvete.estoque * 1000) / produto.tigela.tamanho)
+    return lista_produtos
 
 def calcula_preco_produto(lista_produtos):
     for index, produto in enumerate(lista_produtos):

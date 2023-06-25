@@ -29,6 +29,14 @@ class MontarSorvete(forms.Form):
 
     class Meta:
         model = Produto
-        fields = ['componenetes', 'tigela', 'sorvete'] 
+        fields = ['componentes', 'tigela', 'sorvete'] 
 
+class ComprarSorvete(forms.Form):
+	id_produto = forms.MultipleHiddenInput()
+	precos_produto = forms.MultipleHiddenInput()
+	qtd_sorvete = forms.NumberInput()
+	preco = forms.HiddenInput()
 
+	class Meta:
+		model = Venda
+		fields = ['produtos']

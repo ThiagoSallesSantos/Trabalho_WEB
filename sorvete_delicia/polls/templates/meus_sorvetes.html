@@ -39,9 +39,13 @@
                 <div class="col-md border-end border-primary">
                     <h4>Componentes</h4>
                         <p class="lead">
-                            {% for componente in produto.lista_componentes %}
-                            {{componente.nome}};
-                            {% endfor %}
+                            {% if produto.lista_componentes %}
+                                {% for componente in produto.lista_componentes %}
+                                {{componente.nome}};
+                                {% endfor %}
+                            {% else %}
+                                Não possui nenhum componente.
+                            {% endif %}
                         </p>
                 </div>
                 <div class="col-md justify-content-center align-self-center">
@@ -51,14 +55,11 @@
                                 <label class="form-check-label" for="componentes">
                                     Quantidade:
                                 </label>
-                                <input type="number" class="form-control" name="qtd_sorvete" id="qtd_{{produto.id}}" value="0">
-                            </div>
-                            <div class="col-md justify-content-center align-self-center border-end border-primary">
-                                <button class="btn btn-primary btn-sm">Editar</button>                            
+                                <input type="number" class="form-control" name="qtd_sorvete" id="{{produto.id}}" min="0" max={{produto.sorvete_disponivel}} step="1" value="0" pattern="^([0-9]+)$">
                             </div>
                             <div class="col-md justify-content-center align-self-center">
                                 <a href="/deleta_produtos/{{produto.id}}">
-                                    <button class="btn btn-danger btn-sm">Deletar</button>
+                                    <input type="button" class="btn btn-danger btn-sm" value="Deletar">
                                 </a>
                             </div>
                         </div>
@@ -69,6 +70,7 @@
         
         {% endfor %}
         <center>
+            <input type="hidden" class="btn bg-primary text-white" name="preco" id="preco" value="0.0">
             <input type="submit" class="btn bg-primary text-white" id="comprar" value="Comprar - R$ 0,00">
         </center>
     </form>
@@ -86,7 +88,14 @@ lista_qtd_produtos.forEach(function(qtd_produto) {
 });
 
 function get_preco(){
-    return 0.0;
+    lista_qtd_sorvetes = document.getElementsByName("qtd_sorvete");
+    preco = 0.0
+    for(var i = 0; i < lista_qtd_sorvetes.length; i++){
+        preco_sorvete = document.getElementById("preco_" + lista_qtd_sorvetes[i].id);
+        lista_qtd_sorvetes[i].value = Math.round(lista_qtd_sorvetes[i].value)
+        preco += preco_sorvete.value * lista_qtd_sorvetes[i].value
+    }
+    return preco;
 }
 
 function calcula_preco(){
@@ -97,6 +106,8 @@ function calcula_preco(){
         return
     }
     id_comprar.removeAttribute("disabled");
+    preco_input = document.getElementById("preco");
+    preco_input.value = preco
     id_comprar.value = "Comprar - R$ " + preco.toFixed(2);
 }
 
