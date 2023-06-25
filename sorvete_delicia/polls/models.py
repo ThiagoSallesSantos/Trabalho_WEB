@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.db import models
 
 class Tigela(models.Model):
@@ -66,10 +67,10 @@ class Cupom(models.Model):
         return f"{self.codigo} - {self.desconto*100}%"
 
 class Produto(models.Model):
-    componenetes = models.ManyToManyField(Componente, default=True)
-    tigela = models.ForeignKey(Tigela, on_delete=models.PROTECT)
-    sorvete = models.ForeignKey(Sorvete, on_delete=models.PROTECT)
-    preco = models.FloatField()
+    componentes = models.ManyToManyField(Componente, default=True)
+    tigela = models.ForeignKey(Tigela, on_delete=models.CASCADE)
+    sorvete = models.ForeignKey(Sorvete, on_delete=models.CASCADE)
+    cliente = models.ForeignKey(User, on_delete=models.CASCADE, default=True)
 
     def __str__(self) -> str:
         return f"Produto: {self.sorvete} - {self.tigela}"
@@ -77,6 +78,7 @@ class Produto(models.Model):
 class Venda(models.Model):
     produtos = models.ManyToManyField(Produto)
     data = models.DateTimeField()
+    cliente_id = models.OneToOneField(User, on_delete=models.CASCADE, default=True)
 
     def __str__(self) -> str:
         return f"Venda: {self.data}"

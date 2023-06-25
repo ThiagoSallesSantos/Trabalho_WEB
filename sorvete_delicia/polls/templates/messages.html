@@ -1,7 +1,35 @@
 {% if messages %}
-<ul class="messages">
+
+<div id="alerta">
     {% for message in messages %}
-    <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+            <div class="alert alert-danger" role="alert">
+        {% else %}
+        {% if message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
+            <div class="alert alert-success" role="alert">
+        {% else %}
+            <div class="alert alert-info" role="alert">
+        {% endif %}
+        {% endif %}
+            {{ message }}
+        </div>
     {% endfor %}
-</ul>
+</div>
+
+<script type="text/javascript">
+
+function sleep(milliseconds) {
+    return new Promise(resolve => setTimeout(resolve, milliseconds))
+}
+
+async function apaga_alerta() {
+    await sleep(10000);
+    alerta = document.getElementById("alerta");
+    alerta.remove()
+}
+
+apaga_alerta();
+
+</script>
+
 {% endif %}

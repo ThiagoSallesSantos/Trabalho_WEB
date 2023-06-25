@@ -5,7 +5,7 @@
 <section class="py-5">
     <div class="container">
         <div class="row">
-            <div class="col-md-6">
+            <div class="col-md">
                 <h1>{{sorvete.sabor}}</h1>
                 <p class="lead">
                     <b>Marca: </b>{{sorvete.marca}}
@@ -23,9 +23,9 @@
                     {% endfor %}
                 </p>
             </div>
-            <div class="col-md-6">
+            <div class="col-md justify-content-center align-self-center">
                 <img src="http://localhost:8000/exibir_imagem/{{sorvete.imagem}}" 
-                    alt={{sorvete.sabor}} class="img-fluid" width="320px">
+                    alt={{sorvete.sabor}} class="img-fluid" width="50%">
             </div>
         </div>
     </div>
@@ -33,64 +33,64 @@
 
 <!-- Seção Compra-->
 <section class="py-5 bg-primary text-white">
-    <div class="container">
-        <div class="row">
-            <div class="col-md-auto">
-                <div class="container">
-                    <div class="row">
-                        {% for tigela_tipo in lista_tigelas %}
+    <form method="POST">
+        {% csrf_token %}
+        <div class="container">
+            <div class="row">
+                <div class="col-md-auto">
+                    <div class="container">
+                        <div class="row">
+                            {% for tigela_tipo in lista_tigelas %}
 
-                            {% if tigela_tipo.tigelas%}
+                                {% if tigela_tipo.tigelas%}
 
-                                <div class="col-md-auto border-end">
-                                    <p class="lead">
-                                        <b>{{tigela_tipo.tipo}}</b>
-                                    </p>
-                                    {% for tigela in tigela_tipo.tigelas %}
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="tigelas" id="{{tigela.id}}" value="{{tigela.tamanho}}">
-                                            <label class="form-check-label" for="tigelas">
-                                                {{tigela.tamanho}}ml <br/>
-                                            </label>
-                                        </div>
-                                    {% endfor %}
-                                </div>
+                                    <div class="col-md-auto border-end">
+                                        <p class="lead">
+                                            <b>{{tigela_tipo.tipo}}</b>
+                                        </p>
+                                        {% for tigela in tigela_tipo.tigelas %}
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="tigela" id="{{tigela.tamanho}}" value="{{tigela.id}}">
+                                                <label class="form-check-label" for="tigela">
+                                                    {{tigela.tamanho}}ml <br/>
+                                                </label>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                
+                                {% endif %}
                             
-                            {% endif %}
-                        
-                        {% endfor %}
+                            {% endfor %}
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="col-md-auto border-end">
-                {% for componente in lista_componentes %}
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="componentes" value="{{componente.preco}}" id="{{componente.id}}">
-                        <label class="form-check-label" for="componentes">
-                            {{componente.nome}} - R$ {{componente.preco}}
-                        </label>
-                    </div>
-                {% endfor %}
-            </div>
-            <div class="col-md-auto">
-                <h2>Preço</h2>
-                <p class="lead"> 
-                    R$ <span id="preco" value=0.0>0.0</span>
-                </p>
-                <a href="http://localhost:8000/" class="btn bg-white text-primary" id="comprar">Comprar!</a>
+                <div class="col-md-auto border-end">
+                    {% for componente in lista_componentes %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="componentes" value="{{componente.id}}" id="{{componente.preco}}">
+                            <label class="form-check-label" for="componentes">
+                                {{componente.nome}} - R$ {{componente.preco}}
+                            </label>
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="col-md-auto">
+                    <h2>Preço</h2>
+                    <p class="lead"> 
+                        R$ <span id="preco">0.0</span>
+                    </p>
+                    <input type="hidden" value="{{sorvete.id}}" name="sorvete">
+                    <input type="submit" class="btn bg-white text-primary" id="montar" value="Montar!">
+                </div>
             </div>
         </div>
-    </div>
+    </form>
 </section>
 
 <script type="text/javascript">
 
-window.addEventListener('load', 
-    function(){
-        disnable_tigelas();
-        calcula_preco();
-    }, false);
-
+disnable_tigelas();
+calcula_preco();
 
 var componentes = document.querySelectorAll("input[type=checkbox][name=componentes]");
 
@@ -100,7 +100,7 @@ componentes.forEach(function(componente) {
     })
 });
 
-var tigelas = document.querySelectorAll("input[type=radio][name=tigelas]");
+var tigelas = document.querySelectorAll("input[type=radio][name=tigela]");
 tigelas.forEach(function(tigela) {
     tigela.addEventListener('change', function() {
         calcula_preco();
@@ -108,10 +108,10 @@ tigelas.forEach(function(tigela) {
 });
 
 function get_tigela_selecionada(){
-    var lista_tigelas = document.getElementsByName('tigelas');
+    var lista_tigelas = document.getElementsByName('tigela');
     for(var i = 0; i < lista_tigelas.length; i++){
         if(lista_tigelas[i].checked){
-            return lista_tigelas[i].value;
+            return lista_tigelas[i].id;
         }
     }
     return 0.0
@@ -122,7 +122,7 @@ function get_componentes_selecionados(){
     var preco_componenetes_selecionados = 0.0
     for(var i = 0; i < lista_componentes.length; i++){
         if(lista_componentes[i].checked){
-            preco_componenetes_selecionados += Number(lista_componentes[i].value);
+            preco_componenetes_selecionados += Number(lista_componentes[i].id);
         }
     }
     return preco_componenetes_selecionados
@@ -130,7 +130,7 @@ function get_componentes_selecionados(){
 
 function calcula_preco(){
     var tigela_selecionada = get_tigela_selecionada();
-    id_comprar = document.getElementById("comprar");
+    id_comprar = document.getElementById("montar");
     if(!tigela_selecionada){
         id_comprar.setAttribute("disabled", "disabled");
         return
@@ -139,14 +139,13 @@ function calcula_preco(){
     var preco_componenetes_selecionados = get_componentes_selecionados();
     preco = "{{sorvete.preco}}" * tigela_selecionada + preco_componenetes_selecionados;
     id_preco = document.getElementById("preco");
-    id_preco.value = preco.toFixed(2);
     id_preco.textContent = preco.toFixed(2)
 }
 
 function disnable_tigelas(){
-    var lista_tigelas = document.getElementsByName('tigelas');
+    var lista_tigelas = document.getElementsByName('tigela');
     for(var i = 0; i < lista_tigelas.length; i++){
-        if(lista_tigelas[i].value > "{{sorvete.estoque}}"*1000){
+        if(lista_tigelas[i].id > "{{sorvete.estoque}}"*1000){
             lista_tigelas[i].setAttribute("disabled", "disabled");
         }
     }

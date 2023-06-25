@@ -2,11 +2,10 @@ from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.db import connection
 from sorvete_delicia.settings import MEDIA_ROOT
-
-from .forms import NewUserForm
+from .models import *
+from .forms import NewUserForm, MontarSorvete
 from django.contrib.auth import login, authenticate, logout
 from django.contrib import messages
-from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.forms import AuthenticationForm 
 
 def dictfetchall(cursor):
@@ -28,6 +27,17 @@ def index(request):
     return render(request, "index.html", {"lista_sorvetes": lista_sorvetes})
 
 def sorvete(request, id_sorvete):
+    if request.method == "POST":
+        form = MontarSorvete(request.POST)
+        if form.is_valid():
+            if request.user.is_authenticated:
+                cria_produto(dict(request.POST), request.user)
+                messages.success(request,"Seu sorvete foi montado com sucesso!")
+                return redirect("meus_sorvetes")
+            else:
+                messages.error(request,"Você precisar estar logado em sua conta para montar um sorvete!")
+        else:
+            messages.error(request,"Erro ao montar o seu sorvete!")
     with connection.cursor() as cursor:
         SQL = f"""
             SELECT * 
@@ -42,7 +52,83 @@ def sorvete(request, id_sorvete):
                                             "lista_componentes": corrigi_preco(get_all_componentes())
                                         })
 
+def meus_sorvetes(request):
+    if request.user.is_authenticated:
+        return render(request, "meus_sorvetes.html", {
+                                                    "lista_produtos": calcula_preco_produto(get_all_produtos_by_user(request.user))
+                                                })
+    else:
+        messages.error(request,"Você precisar estar logado em sua conta para acessar sua página de produtos!")
+        return redirect("index")
+
+def deleta_produtos(request, id_produto: int):
+    if request.user.is_authenticated:
+        produto = Produto.objects.get(id=id_produto)
+        if produto.cliente == request.user:
+            produto.delete()
+            messages.success(request,"Produto deletado com sucesso!")
+        else:
+            messages.error(request,"Você precisar estar logado para deletar algum produto!")
+    else:
+        messages.error(request,"Você precisar estar logado para deletar algum produto!")
+    return redirect("meus_sorvetes")
+
+def register_request(request):
+	if request.method == "POST":
+		form = NewUserForm(request.POST)
+		if form.is_valid():
+			user = form.save()
+			login(request, user)
+			messages.success(request, "Registration successful." )
+			return redirect("index")
+		messages.error(request, form.errors)
+	form = NewUserForm()
+	return render(request, "register.html", {"register_form":form})
+
+def login_request(request):
+	if request.method == "POST":
+		form = AuthenticationForm(request, data=request.POST)
+		if form.is_valid():
+			username = form.cleaned_data.get('username')
+			password = form.cleaned_data.get('password')
+			user = authenticate(username=username, password=password)
+			if user is not None:
+				login(request, user)
+				messages.success(request, f"Você foi logado com sucesso! Sr(a). {username}.")
+				return redirect("index")
+			else:
+				messages.error(request,"A senha ou o nome de usuário está(ão) incorretos!")
+		else:
+			messages.error(request,"A senha ou o nome de usuário está(ão) inválidos!")
+	form = AuthenticationForm()
+	return render(request, "login.html", {"login_form":form})
+
+def logout_request(request):
+	logout(request)
+	messages.success(request, "Você foi deslogado com sucesso") 
+	return redirect("index")
+
+
 ## Paginas Auxiliares - Acesso ao Banco
+
+def get_all_produtos_by_user(usuario):
+    lista_produtos = Produto.objects.filter(cliente=usuario)
+    for index, produto in enumerate(lista_produtos):
+        lista_produtos[index].lista_componentes = produto.componentes.all()
+    return lista_produtos
+
+def cria_produto(form, usuario):
+    produto = Produto()
+    produto.tigela = Tigela.objects.get(id=form["tigela"][0])
+    produto.sorvete = Sorvete.objects.get(id=form["sorvete"][0])
+    produto.cliente = usuario
+    produto.save()
+
+    lista_componentes: list[Componente] = list([])
+    for componente_id in form["componentes"]:
+        lista_componentes.append(Componente.objects.get(id=componente_id))
+    produto.componentes.set(lista_componentes)
+    produto.save()
 
 def get_all_componentes():
     lista_componentes = list([])
@@ -96,6 +182,14 @@ def get_ingredientes_by_sorvete(id_sorvete):
 
 ## Paginas Auxiliares - Sem Acesso ao Banco
 
+def calcula_preco_produto(lista_produtos):
+    for index, produto in enumerate(lista_produtos):
+        lista_produtos[index].preco = produto.sorvete.preco * produto.tigela.tamanho
+        for componente in produto.lista_componentes:
+            lista_produtos[index].preco += componente.preco
+        lista_produtos[index].preco = f'{lista_produtos[index].preco:.2f}'
+    return lista_produtos
+
 def exibir_imagem(request, path_imagem):
     imagem_file = MEDIA_ROOT+"/"+path_imagem
     image_data = open(imagem_file, "rb").read()
@@ -137,38 +231,3 @@ def organiza_lista_tigelas(lista_tigelas):
                 chave = "Outros."
         lista_tigelas_organizada[chave]["tigelas"].append(dado)
     return list(lista_tigelas_organizada.values())
-
-def register_request(request):
-	if request.method == "POST":
-		form = NewUserForm(request.POST)
-		if form.is_valid():
-			user = form.save()
-			login(request, user)
-			messages.success(request, "Registration successful." )
-			return redirect("index")
-		messages.error(request, form.errors)
-	form = NewUserForm()
-	return render(request, "register.html", {"register_form":form})
-
-def login_request(request):
-	if request.method == "POST":
-		form = AuthenticationForm(request, data=request.POST)
-		if form.is_valid():
-			username = form.cleaned_data.get('username')
-			password = form.cleaned_data.get('password')
-			user = authenticate(username=username, password=password)
-			if user is not None:
-				login(request, user)
-				messages.info(request, f"You are now logged in as {username}.")
-				return redirect("index")
-			else:
-				messages.error(request,"Invalid username or password.")
-		else:
-			messages.error(request,"Invalid username or password.")
-	form = AuthenticationForm()
-	return render(request, "login.html", {"login_form":form})
-
-def logout_request(request):
-	logout(request)
-	messages.info(request, "You have successfully logged out.") 
-	return redirect("index")
