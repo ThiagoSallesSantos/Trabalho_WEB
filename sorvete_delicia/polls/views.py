@@ -1,3 +1,4 @@
+import pika
 from django.http import HttpResponse
 from datetime import datetime
 from django.shortcuts import render, redirect
@@ -158,6 +159,8 @@ def cria_venda(form, usuario):
             venda.relacaoprodutovenda_set.add(relacao)
             produto.relacaoprodutovenda_set.add(relacao)
     venda.save()
+
+    sistema_mensageria(f"Venda #{venda.id} do usuario {venda.cliente} - está em análise!")
     
 
 def get_all_produtos_by_user(usuario):
@@ -286,3 +289,25 @@ def organiza_lista_tigelas(lista_tigelas):
                 chave = "Outros."
         lista_tigelas_organizada[chave]["tigelas"].append(dado)
     return list(lista_tigelas_organizada.values())
+
+def sistema_mensageria(
+        mensagem,
+        user = "guest",
+        password = "guest",
+        host = "localhost",
+        queue = "sorvete_delicia"
+
+):
+    credentials = pika.PlainCredentials(user, password)
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host=host,credentials=credentials))
+    channel = connection.channel()
+    channel.queue_declare(queue=queue, durable=True)
+    channel.basic_publish(
+    exchange='',
+    routing_key=queue,
+    body=mensagem,
+    properties=pika.BasicProperties(
+        delivery_mode=pika.spec.PERSISTENT_DELIVERY_MODE
+    ))
+    connection.close()
+
