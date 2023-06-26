@@ -70,7 +70,7 @@ class Produto(models.Model):
 class Venda(models.Model):
     produtos = models.ManyToManyField(Produto, through='RelacaoProdutoVenda')
     data = models.DateTimeField()
-    cliente = models.OneToOneField(User, on_delete=models.CASCADE, default=True)
+    cliente = models.ForeignKey(User, on_delete=models.CASCADE, default=True)
     preco = models.FloatField(help_text="Valor em reais", default=True)
 
     def __str__(self) -> str:

@@ -1,0 +1,55 @@
+{% extends "header.html" %}
+{% block content %}
+
+<!-- Seção de confirmação de pedido -->
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-8 offset-md-2">
+                <div class="card">
+                    <div class="card-body">
+                        <center>
+                            <h2 class="card-title mb-4">Meus Pedidos</h2>
+                        </center>
+                        {% if lista_vendas %}
+                        {% for venda in lista_vendas %}
+                        <h4 class="card-subtitle mb-2 mt-5">Detalhes do Pedido - #{{venda.id}}</h4>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Produto</th>
+                                    <th>Quantidade</th>
+                                    <th>Preço (por unidades)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for produto in venda.lista_produtos %}
+                                <tr>
+                                    <td>{{produto.sorvete.sabor}}</td>
+                                    <td>{{produto.relacao.qtd_produto}}</td>
+                                    <td>R$ {{produto.preco}}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td>Total</td>
+                                    <td>{{venda.qtd_produto_total}}</td>
+                                    <td>R$ {{venda.preco}}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                        {% endfor %}
+                        {% else %}
+                        <center>
+                            <h4 class="card-subtitle mb-2 mt-5">Você não possui nenhum pedido! ;({{venda.id}}</h4>
+                        </center>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

@@ -60,6 +60,7 @@ def meus_sorvetes(request):
             if form.is_valid():
                 cria_venda(dict(request.POST), request.user)
                 messages.success(request, "Compra encaminhada com sucessor!")
+                return redirect("minhas_compras")
             else:
                 messages.error(request, "Erro ao preencher formulário para comprar o seu(s) sorvete(s)!")
         return render(request, "meus_sorvetes.html", {
@@ -71,7 +72,9 @@ def meus_sorvetes(request):
 
 def minhas_compras(request):
     if request.user.is_authenticated:
-        ...
+        return render(request, "minhas_compras.html", {
+            "lista_vendas": get_all_vendas_by_user(request.user)
+        })
     else:
         messages.error(request,"Você precisar estar logado em sua conta para acessar sua página de compra(s) passada(s)!")
         return redirect("index")
@@ -126,6 +129,20 @@ def logout_request(request):
 
 ## Paginas Auxiliares - Acesso ao Banco
 
+def get_all_vendas_by_user(usuario):
+    lista_vendas = Venda.objects.filter(cliente=usuario)
+    for index, venda in enumerate(lista_vendas):
+        venda.qtd_produto_total = 0
+        lista_vendas[index].lista_produtos = venda.produtos.all()
+        for index_, produto in enumerate(lista_vendas[index].lista_produtos):
+            if produto:
+                lista_vendas[index].lista_produtos[index_].lista_componentes = produto.componentes.all()
+                lista_vendas[index].lista_produtos[index_].relacao = RelacaoProdutoVenda.objects.get(produto=produto, venda=venda)
+                venda.qtd_produto_total += lista_vendas[index].lista_produtos[index_].relacao.qtd_produto
+        lista_vendas[index].lista_produtos = calcula_preco_produto(lista_vendas[index].lista_produtos)
+    return lista_vendas
+
+
 def cria_venda(form, usuario):
     venda = Venda()
     venda.cliente = usuario
@@ -135,10 +152,11 @@ def cria_venda(form, usuario):
 
     relacao_produto_qtd = dict(zip(form["id_produto"], form["qtd_sorvete"]))
     for id_produto in relacao_produto_qtd.keys():
-        produto = Produto.objects.get(id=id_produto)
-        relacao = RelacaoProdutoVenda.objects.create(produto=produto, venda=venda, qtd_produto=relacao_produto_qtd[id_produto])
-        venda.relacaoprodutovenda_set.add(relacao)
-        produto.relacaoprodutovenda_set.add(relacao)
+        if int(relacao_produto_qtd[id_produto]):
+            produto = Produto.objects.get(id=id_produto)
+            relacao = RelacaoProdutoVenda.objects.create(produto=produto, venda=venda, qtd_produto=relacao_produto_qtd[id_produto])
+            venda.relacaoprodutovenda_set.add(relacao)
+            produto.relacaoprodutovenda_set.add(relacao)
     venda.save()
     
 
